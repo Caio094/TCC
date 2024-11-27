@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "tcc",
+    "name": "MeuCarrinho",
     "slug": "snack-7a5a61e1-e72f-4755-96a1-f8b818465ee2",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -15,6 +15,7 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "gerenciador.lista",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"

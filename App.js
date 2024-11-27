@@ -68,6 +68,9 @@ function InicioScreen({ navigation }) {
 // Tela Gerenciar Listas
 function GerenciarListasScreen({ navigation }) {
   const [listas, setListas] = useState([]);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [editarLista, setEditarLista] = useState(null);
+  const [novoNome, setNovoNome] = useState('');
 
   useEffect(() => {
     const atualizarListas = async () => {
@@ -77,6 +80,25 @@ function GerenciarListasScreen({ navigation }) {
     atualizarListas();
   }, []);
 
+  const salvarAlteracoesLista = async () => {
+    const atualizadas = listas.map((lista) =>
+      lista === editarLista ? { ...lista, nome: novoNome } : lista
+    );
+    setListas(atualizadas);
+    await salvarListas(atualizadas);
+    setEditarLista(null);
+    setNovoNome('');
+    setModalVisible(false);
+  };
+
+  const excluirLista = async () => {
+    const atualizadas = listas.filter((lista) => lista !== editarLista);
+    setListas(atualizadas);
+    await salvarListas(atualizadas);
+    setEditarLista(null);
+    setModalVisible(false);
+  };
+
   return (
     <LinearGradient colors={['#ADD8E6', '#FFFFFF']} style={styles.container}>
       <Text style={styles.title}>Gerencie Suas Listas</Text>
@@ -84,14 +106,26 @@ function GerenciarListasScreen({ navigation }) {
         data={listas}
         keyExtractor={(item, index) => index.toString()}
         renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.listButton}
-            onPress={() => navigation.navigate('Lista', { lista: item })}
-          >
-            <Text style={styles.listText} numberOfLines={1}>
-              {item.nome}
-            </Text>
-          </TouchableOpacity>
+          <View style={styles.listItem}>
+            <TouchableOpacity
+              style={styles.listButton}
+              onPress={() => navigation.navigate('Lista', { lista: item })}
+            >
+              <Text style={styles.listText} numberOfLines={1}>
+                {item.nome}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.editButton}
+              onPress={() => {
+                setEditarLista(item);
+                setNovoNome(item.nome);
+                setModalVisible(true);
+              }}
+            >
+              <Text style={styles.editButtonText}>✏️</Text>
+            </TouchableOpacity>
+          </View>
         )}
       />
       <TouchableOpacity
@@ -100,6 +134,43 @@ function GerenciarListasScreen({ navigation }) {
       >
         <Text style={styles.fabText}>+</Text>
       </TouchableOpacity>
+
+      {/* Modal para editar lista */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <TextInput
+              style={styles.input}
+              placeholder="Novo nome da lista"
+              value={novoNome}
+              onChangeText={setNovoNome}
+            />
+            <TouchableOpacity
+              style={styles.button}
+              onPress={salvarAlteracoesLista}
+            >
+              <Text style={styles.buttonText}>Salvar Alterações</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.button, { backgroundColor: '#ff4d4d' }]}
+              onPress={excluirLista}
+            >
+              <Text style={styles.buttonText}>Excluir Lista</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.button, { backgroundColor: '#888' }]}
+              onPress={() => setModalVisible(false)}
+            >
+              <Text style={styles.buttonText}>Cancelar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </LinearGradient>
   );
 }
@@ -139,7 +210,7 @@ function NovaListaScreen({ navigation }) {
 }
 
 // Tela Lista
-function ListaScreen({ route, navigation }) {
+function ListaScreen({ route }) {
   const { lista } = route.params;
   const [itens, setItens] = useState(lista.itens || []);
   const [modalVisible, setModalVisible] = useState(false);
@@ -148,15 +219,6 @@ function ListaScreen({ route, navigation }) {
   const [dataValidade, setDataValidade] = useState('');
   const [quantidade, setQuantidade] = useState(1);
   const [editarItem, setEditarItem] = useState(null);
-
-  useEffect(() => {
-    const atualizarItens = async () => {
-      const listas = await carregarListas();
-      const listaAtualizada = listas.find((l) => l.nome === lista.nome);
-      if (listaAtualizada) setItens(listaAtualizada.itens);
-    };
-    atualizarItens();
-  }, []);
 
   const salvarItensNaLista = async (novosItens) => {
     const listas = await carregarListas();
@@ -205,37 +267,9 @@ function ListaScreen({ route, navigation }) {
     setEditarModalVisible(false);
   };
 
-  const excluirLista = async () => {
-    Alert.alert(
-      'Excluir Lista',
-      `Tem certeza que deseja excluir a lista "${lista.nome}"?`,
-      [
-        {
-          text: 'Cancelar',
-          style: 'cancel',
-        },
-        {
-          text: 'Excluir',
-          style: 'destructive',
-          onPress: async () => {
-            const listas = await carregarListas();
-            const novasListas = listas.filter((l) => l.nome !== lista.nome);
-            await salvarListas(novasListas);
-            navigation.navigate('Gerenciar Listas');
-          },
-        },
-      ]
-    );
-  };
-
   return (
     <LinearGradient colors={['#ADD8E6', '#FFFFFF']} style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>{lista.nome}</Text>
-        <TouchableOpacity onPress={excluirLista}>
-          <Text style={styles.deleteButtonText}>🗑️</Text>
-        </TouchableOpacity>
-      </View>
+      <Text style={styles.title}>{lista.nome}</Text>
       <FlatList
         data={itens}
         keyExtractor={(item, index) => index.toString()}
@@ -264,8 +298,8 @@ function ListaScreen({ route, navigation }) {
               onPress={() => {
                 setEditarItem(item);
                 setNovoItem(item.nome);
-                setDataValidade(item.validade);
-                setQuantidade(item.quantidade);
+                setDataValidade(item.validade || '');
+                setQuantidade(item.quantidade || 1);
                 setEditarModalVisible(true);
               }}
             >
@@ -470,7 +504,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 10,
-    width: '95%',
+    width: '90%',
+    justifyContent: 'space-between',
   },
   itemRow: {
     flexDirection: 'row',
@@ -493,7 +528,12 @@ const styles = StyleSheet.create({
     color: '#888',
   },
   editButton: {
-    paddingHorizontal: 10,
+    paddingHorizontal: 5,
+     marginRigth: 100,
+  },
+  editButtonText: {
+    fontSize: 16,
+    color: '#007AFF',
   },
   modalContainer: {
     flex: 1,
