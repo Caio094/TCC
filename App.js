@@ -8,7 +8,9 @@ import {
   FlatList,
   Modal,
   Alert,
+  Image,
 } from 'react-native';
+
 import CheckBox from 'expo-checkbox';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -54,7 +56,9 @@ const formatarData = (texto) => {
 function InicioScreen({ navigation }) {
   return (
     <LinearGradient colors={['#ADD8E6', '#FFFFFF']} style={styles.container}>
-      <Text style={styles.title}>Bem-vindo ao App de Compras</Text>
+    <Image style={styles.logo} source={require('./assets/icon.png')} />
+
+
       <TouchableOpacity
         style={styles.button}
         onPress={() => navigation.navigate('Gerenciar Listas')}
@@ -101,7 +105,7 @@ function GerenciarListasScreen({ navigation }) {
 
   return (
     <LinearGradient colors={['#ADD8E6', '#FFFFFF']} style={styles.container}>
-      <Text style={styles.title}>Gerencie Suas Listas</Text>
+      <Text style={styles.title}>Minhas Listas</Text>
       <FlatList
         data={listas}
         keyExtractor={(item, index) => index.toString()}
@@ -460,7 +464,12 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
-  },
+    marginTop: 5, // Ajuste conforme necessário
+    marginBottom: 5, // Ajuste conforme necessário
+    marginLeft: 3, // Ajuste conforme necessário
+    marginRight: 3, // Ajuste conforme necessário
+  }
+  ,
   fab: {
     position: 'absolute',
     right: 20,
@@ -554,5 +563,10 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     borderRadius: 5,
     marginBottom: 10,
+  },
+  logo: {
+    width: 300, // Ajuste a largura da imagem
+    height: 300, // Ajuste a altura da imagem
+    marginBottom: 20,
   },
 });
